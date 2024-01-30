@@ -21,7 +21,7 @@ origins = [
 ]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -49,9 +49,16 @@ async def predict(file: UploadFile = File(...)):
     bootstrap_project(Path("/home/kedro"))
     with KedroSession.create() as session:
         context: KedroContext = session.load_context()
-    
-    return session.run(pipeline_name="backend")
+        result = session.run(pipeline_name="backend")
 
+    varclass = result.get("formatted_prediction").get("class")
+    confidence = result.get("formatted_prediction").get("confidence")
+    filenamev = file.filename
+    return {
+        'filename': filenamev,
+        'class': varclass,
+        'confidence': confidence
+    }
 
 if __name__ == "__main__":
     uvicorn.run(app, host='0.0.0.0', port=8000)
